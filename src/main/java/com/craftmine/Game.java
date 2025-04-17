@@ -131,11 +131,11 @@ public class Game {
                 lastX = xpos;
                 lastY = ypos;
 
-                // Always process mouse movement for camera
+                // Process mouse movement for camera in both first and third person
                 camera.processMouseMovement(xoffset * mouseSensitivity, yoffset * mouseSensitivity);
                 
                 if (isThirdPerson) {
-                    // Update camera position to follow head in third person
+                    // Update camera position to follow player in third person
                     updateThirdPersonCamera();
                 }
             } else {
@@ -420,8 +420,8 @@ public class Game {
         // Movement only if not crouching in survival mode, or always in creative mode
         if (isCreativeMode || !isCrouching) {
             if (isThirdPerson) {
-                // Third-person movement (relative to fixed direction)
-                float moveAngle = 0;  // Fixed forward direction
+                // Third-person movement (relative to camera direction)
+                float moveAngle = camera.getYaw();  // Use camera yaw for movement direction
                 if (keys[GLFW_KEY_W]) {
                     dx -= moveSpeed * (float)Math.sin(Math.toRadians(moveAngle));
                     dz -= moveSpeed * (float)Math.cos(Math.toRadians(moveAngle));
@@ -501,15 +501,26 @@ public class Game {
     }
 
     private void updateThirdPersonCamera() {
-        // Calculate camera position with fixed offsets
-        float distance = 5.0f;  // Distance behind player
-        float height = isCreativeMode ? 2.0f : 0.0f;  // Height offset based on mode
         float yaw = camera.getYaw();
+        float pitch = camera.getPitch();
         
-        // Position camera behind player based on yaw
-        float cameraX = thirdPersonLockPoint[0] - distance * (float)Math.sin(Math.toRadians(yaw));
-        float cameraY = thirdPersonLockPoint[1] + height;
-        float cameraZ = thirdPersonLockPoint[2] - distance * (float)Math.cos(Math.toRadians(yaw));
+        // Limit the pitch range for third-person to avoid extreme angles
+        if (pitch > 60.0f) pitch = 60.0f;
+        if (pitch < -60.0f) pitch = -60.0f;
+        camera.setPitch(pitch);
+        
+        // Calculate distance based on pitch to avoid clipping into ground at extreme angles
+        float distance = 5.0f;
+        
+        // Calculate camera position with orbital rotation
+        // This keeps the camera at a fixed distance but allows orbiting around the player
+        float horizontalDistance = distance * (float)Math.cos(Math.toRadians(pitch));
+        float verticalDistance = distance * (float)Math.sin(Math.toRadians(pitch));
+        
+        // Position camera with orbital rotation
+        float cameraX = thirdPersonLockPoint[0] - horizontalDistance * (float)Math.sin(Math.toRadians(yaw));
+        float cameraY = thirdPersonLockPoint[1] + verticalDistance + 4.0f; // Increased vertical offset by 3 blocks (from 1.0f to 4.0f)
+        float cameraZ = thirdPersonLockPoint[2] - horizontalDistance * (float)Math.cos(Math.toRadians(yaw));
         
         // Update camera position
         camera.setPosition(cameraX, cameraY, cameraZ);

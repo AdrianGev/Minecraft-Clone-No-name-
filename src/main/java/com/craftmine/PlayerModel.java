@@ -105,24 +105,66 @@ public class PlayerModel {
         skinProcessor.bindSkinTexture();
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         
-        // Render head with rotation
-        glPushMatrix();
-        if (isInGame) {
-            glTranslatef(0.0f, HEAD_SIZE - 8.0f, 0.0f);  // Lower head position for in-game model
-        } else {
-            glTranslatef(0.0f, HEAD_SIZE + BODY_HEIGHT, 0.0f);  // Original position for home screen
-        }
-        glRotatef(headYaw, 0.0f, 1.0f, 0.0f);  // Apply yaw
-        glRotatef(headPitch, 1.0f, 0.0f, 0.0f);  // Apply pitch
-        renderHead(1.0f);
-        glPopMatrix();
-        
         // Render body parts (no rotation)
         renderBody(1.0f);
         renderArms(1.0f);
         renderLegs(1.0f);
         
+        // Render head with rotation - fixed positioning
+        glPushMatrix();
+        // Position the head at the top of the body
+        glTranslatef(0.0f, ARM_HEIGHT + BODY_HEIGHT, 0.0f);
+        // Apply head rotation at this position (after translation)
+        glRotatef(headYaw, 0.0f, 1.0f, 0.0f);  // Apply yaw
+        glRotatef(headPitch, 1.0f, 0.0f, 0.0f);  // Apply pitch
+        // Translate to the corner of the head cube for rendering
+        glTranslatef(-HEAD_SIZE/2, 0, -HEAD_SIZE/2);
+        
+        // Render each face of the head
+        // Front face
+        glPushMatrix();
+        glTranslatef(0, 0, HEAD_SIZE);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadFrontUV(), true);
         glPopMatrix();
+        
+        // Back face
+        glPushMatrix();
+        glTranslatef(HEAD_SIZE, 0, 0);
+        glRotatef(180, 0, 1, 0);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadBackUV(), true);
+        glPopMatrix();
+        
+        // Right face
+        glPushMatrix();
+        glTranslatef(HEAD_SIZE, 0, HEAD_SIZE);
+        glRotatef(90, 0, 1, 0);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadRightUV(), true);
+        glPopMatrix();
+        
+        // Left face
+        glPushMatrix();
+        glTranslatef(0, 0, 0);
+        glRotatef(-90, 0, 1, 0);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadLeftUV(), true);
+        glPopMatrix();
+        
+        // Top face
+        glPushMatrix();
+        glTranslatef(0, HEAD_SIZE, HEAD_SIZE);
+        glRotatef(-90, 1, 0, 0);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadTopUV(), true);
+        glPopMatrix();
+        
+        // Bottom face
+        glPushMatrix();
+        glTranslatef(0, 0, 0);
+        glRotatef(90, 1, 0, 0);
+        renderFace(HEAD_SIZE, HEAD_SIZE, 0, skinProcessor.getHeadBottomUV(), true);
+        glPopMatrix();
+        
+        glPopMatrix(); // Pop head matrix
+        
+        glPopMatrix(); // Pop main matrix
     }
     
     private void renderHead(float scale) {
